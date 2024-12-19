@@ -91,11 +91,24 @@ export const submitFormEligible = async (
     // Process all options safely
     const validAccountStationOptions = await Promise.all(
       accountStationOptions.map(
-        ({ AccountStationOptionID, AccountStationOptionName }) =>
-          processAccountStationOption(
+        ({ AccountStationOptionID, AccountStationOptionName }) => {
+          if (
+            AccountStationOptionName === "Vanuatu" &&
+            validatedData.accountType === "Stock Account"
+          )
+            return {
+              AccountStationOptionName,
+              AccountStationOptionID,
+              isContinentAccountBanned: true,
+              isCountryAccountBanned: true,
+              isNationalityAccountBanned: true,
+              error: null,
+            };
+          return processAccountStationOption(
             AccountStationOptionID,
             AccountStationOptionName
-          )
+          );
+        }
       )
     );
 

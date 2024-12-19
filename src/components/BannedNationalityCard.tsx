@@ -66,7 +66,7 @@ export default function BannedNationalityCard({
 
       {/* Content Display */}
       <div className="flex flex-col gap-2 lg:gap-8 lg:flex-row lg:items-center">
-        <div className="sm:flex-1 flex items-center gap-2 text-sm max-w-fit">
+        {/* <div className="sm:flex-1 flex items-center gap-2 text-sm max-w-fit">
           <p className="font-semibold text-gray-600">ID :</p>
           <p className="font-bold">{data.BannedNationalityID}</p>
         </div>
@@ -74,7 +74,7 @@ export default function BannedNationalityCard({
         <div className="sm:flex-1 flex items-center gap-2 text-sm max-w-fit">
           <p className="font-semibold text-gray-600">Date :</p>
           <p className="font-bold">{data.BannedNationalityDate}</p>
-        </div>
+        </div> */}
 
         <div className="sm:flex-1 flex items-center gap-2 text-sm max-w-fit">
           <p className="font-semibold text-gray-600">Nationality :</p>
