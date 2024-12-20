@@ -5,7 +5,9 @@ import path from "path";
 // Define the type for the database instance
 type SQLiteDB = Database<sqlite3.Database, sqlite3.Statement>;
 
-const dbFilePath = path.resolve(process.cwd(), "db", "mydb.sqlite");
+const dbFilePath = process.env.VOLUME_PATH
+  ? path.resolve(process.cwd(), "..", "db", "mydb.sqlite")
+  : path.resolve(process.cwd(), "db", "mydb.sqlite");
 
 // Function to get the database connection
 export async function getDatabase(): Promise<SQLiteDB> {

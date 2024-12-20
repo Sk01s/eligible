@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "move-db": "node move-db.js"
+    "move-db": "node ./move-db.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
