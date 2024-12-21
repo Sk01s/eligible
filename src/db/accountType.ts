@@ -1,6 +1,7 @@
 import { handleDBError } from "../lib/utils";
 import { getDatabase } from "./db";
 import { AccountType, AccountTypeInput } from "./dbTypes";
+import { RowDataPacket, ResultSetHeader } from "mysql2/promise";
 
 // Insert a new account type
 export async function insertAccountTypeDataAccess({
@@ -11,18 +12,19 @@ export async function insertAccountTypeDataAccess({
   error?: string;
 }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
-    const result = await db.run(
+    const [result] = await db.execute<ResultSetHeader>(
       `INSERT INTO AccountTypes (AccountTypeName) VALUES (?)`,
       [AccountTypeName]
     );
 
-    return { success: true, lastID: result.lastID };
+    return { success: true, lastID: result.insertId };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -35,6 +37,9 @@ export async function insertManyAccountTypesDataAccess(
   error?: string;
 }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
     const statement = await db.prepare(
@@ -44,16 +49,13 @@ export async function insertManyAccountTypesDataAccess(
     let insertedCount = 0;
 
     for (const { AccountTypeName } of accountTypes) {
-      await statement.run([AccountTypeName]);
+      await statement.execute([AccountTypeName]); // Use execute instead of run
       insertedCount++;
     }
 
-    await statement.finalize();
     return { success: true, insertedCount };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -63,20 +65,21 @@ export async function updateAccountTypeDataAccess(
   AccountTypeName: string
 ): Promise<{ success: boolean; error?: string }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
-    const result = await db.run(
+    const [result] = await db.execute<ResultSetHeader>(
       `UPDATE AccountTypes SET AccountTypeName = ? WHERE AccountTypeID = ?`,
       [AccountTypeName, accountTypeID]
     );
 
-    const changes = result.changes ?? 0; // Fallback to 0 if changes is undefined
+    const changes = result.affectedRows ?? 0; // Fallback to 0 if changes is undefined
 
     return { success: changes > 0 };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -85,34 +88,38 @@ export async function deleteAccountTypeDataAccess(
   accountTypeID: number
 ): Promise<{ success: boolean; error?: string }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
-    const result = await db.run(
+    const [result] = await db.execute<ResultSetHeader>(
       `DELETE FROM AccountTypes WHERE AccountTypeID = ?`,
       [accountTypeID]
     );
 
-    const changes = result.changes ?? 0; // Fallback to 0 if changes is undefined
+    const changes = result.affectedRows ?? 0; // Fallback to 0 if changes is undefined
 
     return { success: changes > 0 };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
 // Get all account types
 export async function getAllAccountTypesDataAccess(): Promise<AccountType[]> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
-    const rows = await db.all(`SELECT * FROM AccountTypes`);
+    const [rows] = await db.execute<RowDataPacket[]>(
+      "SELECT * FROM AccountTypes"
+    );
     return rows as AccountType[];
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -122,16 +129,19 @@ export async function deleteAllAccountTypesDataAccess(): Promise<{
   error?: string;
 }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
-    const result = await db.run(`DELETE FROM AccountTypes`);
-    const changes = result.changes ?? 0; // Fallback to 0 if changes is undefined
+    const [result] = await db.execute<ResultSetHeader>(
+      "DELETE FROM AccountTypes"
+    );
+    const changes = result.affectedRows ?? 0; // Fallback to 0 if changes is undefined
 
     return { success: changes > 0 };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -140,17 +150,18 @@ export async function findAccountTypeDataAccess(
   accountTypeID: number
 ): Promise<AccountType | null> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
-    const row = await db.get(
+    const [rows] = await db.execute<RowDataPacket[]>(
       `SELECT * FROM AccountTypes WHERE AccountTypeID = ?`,
       [accountTypeID]
     );
-    return row ? (row as AccountType) : null;
+    return rows.length > 0 ? (rows[0] as AccountType) : null;
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -159,16 +170,17 @@ export async function doesAccountTypeExistDataAccess(
   accountTypeID: number
 ): Promise<boolean> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
-    const row = await db.get(
+    const [rows] = await db.execute<RowDataPacket[]>(
       `SELECT 1 FROM AccountTypes WHERE AccountTypeID = ?`,
       [accountTypeID]
     );
-    return !!row; // Return true if the row exists, false otherwise
+    return rows.length > 0; // Return true if the row exists, false otherwise
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }

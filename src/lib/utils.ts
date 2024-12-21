@@ -11,8 +11,8 @@ import { viewAllBannedNationalities } from "@/app/actions/bannedNationalityActio
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-}
-function isSQLiteError(
+} // Utility function to check if the error matches the shape of a MySQL error.
+function isMySQLError(
   error: unknown
 ): error is { code: string; message: string } {
   return (
@@ -20,29 +20,39 @@ function isSQLiteError(
     error !== null &&
     "code" in error &&
     "message" in error &&
-    typeof (error as { message: unknown }).message === "string" &&
-    typeof (error as { code: unknown }).code === "string"
+    typeof (error as { code: unknown }).code === "string" &&
+    typeof (error as { message: unknown }).message === "string"
   );
 }
 
+// Custom error class for database-related errors.
 class DatabaseError extends Error {
-  constructor(public code?: string, message?: string) {
+  constructor(
+    public code?: string,
+    message: string = "A database error occurred"
+  ) {
     super(message);
     this.name = "DatabaseError";
   }
 }
 
+// Function to handle and re-throw database-related errors.
 export async function handleDBError(error: unknown): Promise<never> {
-  if (isSQLiteError(error)) {
-    console.error("SQLite error:", error.message);
-    throw new DatabaseError(error.code, `SQLite Error: ${error.message}`);
-  } else if (error instanceof Error) {
-    console.error("Unexpected error:", error.message);
-    throw new DatabaseError(undefined, `Unexpected Error: ${error.message}`);
-  } else {
-    console.error("Unknown error:", error);
-    throw new DatabaseError(undefined, "An unknown error occurred");
+  if (isMySQLError(error)) {
+    console.error("[MySQL Error]", {
+      code: error.code,
+      message: error.message,
+    });
+    throw new DatabaseError(error.code, `MySQL Error: ${error.message}`);
   }
+
+  if (error instanceof Error) {
+    console.error("[Unexpected Error]", { message: error.message });
+    throw new DatabaseError(undefined, `Unexpected Error: ${error.message}`);
+  }
+
+  console.error("[Unknown Error]", { error });
+  throw new DatabaseError(undefined, "An unknown error occurred");
 }
 
 export const UN_CERTIFIED_COUNTRIES: {

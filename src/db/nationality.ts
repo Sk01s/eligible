@@ -1,6 +1,7 @@
-import { handleDBError } from "../lib/utils";
+import { handleDBError } from "@/lib/utils";
 import { getDatabase } from "./db";
 import { Nationality, NationalityInput } from "./dbTypes";
+import { RowDataPacket, ResultSetHeader } from "mysql2/promise";
 
 // Insert a new nationality
 export async function insertNationalityDataAccess({
@@ -11,30 +12,30 @@ export async function insertNationalityDataAccess({
   error?: string;
 }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
-    const result = await db.run(
+    const [result] = await db.execute<ResultSetHeader>(
       `INSERT INTO Nationality (NationalityName) VALUES (?)`,
       [NationalityName]
     );
 
-    return { success: true, lastID: result.lastID };
+    return { success: true, lastID: result.insertId };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
 // Insert multiple nationalities
 export async function insertManyNationalitiesDataAccess(
   nationalities: Omit<Nationality, "NationalityID">[]
-): Promise<{
-  success: boolean;
-  insertedCount: number;
-  error?: string;
-}> {
+): Promise<{ success: boolean; insertedCount: number; error?: string }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
     const statement = await db.prepare(
@@ -44,16 +45,13 @@ export async function insertManyNationalitiesDataAccess(
     let insertedCount = 0;
 
     for (const { NationalityName } of nationalities) {
-      await statement.run([NationalityName]);
+      await statement.execute([NationalityName]); // Use execute instead of run
       insertedCount++;
     }
 
-    await statement.finalize();
     return { success: true, insertedCount };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -63,20 +61,21 @@ export async function updateNationalityDataAccess(
   NationalityName: string
 ): Promise<{ success: boolean; error?: string }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
-    const result = await db.run(
+    const [result] = await db.execute<ResultSetHeader>(
       `UPDATE Nationality SET NationalityName = ? WHERE NationalityID = ?`,
       [NationalityName, nationalityID]
     );
 
-    const changes = result.changes ?? 0; // Fallback to 0 if changes is undefined
+    const changes = result.affectedRows ?? 0; // Fallback to 0 if changes is undefined
 
     return { success: changes > 0 };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -85,34 +84,38 @@ export async function deleteNationalityDataAccess(
   nationalityID: number
 ): Promise<{ success: boolean; error?: string }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
-    const result = await db.run(
+    const [result] = await db.execute<ResultSetHeader>(
       `DELETE FROM Nationality WHERE NationalityID = ?`,
       [nationalityID]
     );
 
-    const changes = result.changes ?? 0; // Fallback to 0 if changes is undefined
+    const changes = result.affectedRows ?? 0; // Fallback to 0 if changes is undefined
 
     return { success: changes > 0 };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
 // Get all nationalities
 export async function getAllNationalitiesDataAccess(): Promise<Nationality[]> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
-    const rows = await db.all(`SELECT * FROM Nationality`);
+    const [rows] = await db.execute<RowDataPacket[]>(
+      "SELECT * FROM Nationality"
+    );
     return rows as Nationality[];
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -122,16 +125,19 @@ export async function deleteAllNationalitiesDataAccess(): Promise<{
   error?: string;
 }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
-    const result = await db.run(`DELETE FROM Nationality`);
-    const changes = result.changes ?? 0; // Fallback to 0 if changes is undefined
+    const [result] = await db.execute<ResultSetHeader>(
+      "DELETE FROM Nationality"
+    );
+    const changes = result.affectedRows ?? 0; // Fallback to 0 if changes is undefined
 
     return { success: changes > 0 };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -140,17 +146,18 @@ export async function findNationalityDataAccess(
   nationalityID: number
 ): Promise<Nationality | null> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
-    const row = await db.get(
+    const [rows] = await db.execute<RowDataPacket[]>(
       `SELECT * FROM Nationality WHERE NationalityID = ?`,
       [nationalityID]
     );
-    return row ? (row as Nationality) : null;
+    return rows.length > 0 ? (rows[0] as Nationality) : null;
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -159,16 +166,17 @@ export async function doesNationalityExistDataAccess(
   nationalityID: number
 ): Promise<boolean> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
 
   try {
-    const row = await db.get(
+    const [rows] = await db.execute<RowDataPacket[]>(
       `SELECT 1 FROM Nationality WHERE NationalityID = ?`,
       [nationalityID]
     );
-    return !!row; // Return true if the row exists, false otherwise
+    return rows.length > 0; // Return true if the row exists, false otherwise
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }

@@ -1,4 +1,3 @@
-// DATA ACCESS LAYER FUNCTIONS
 import { handleDBError } from "../lib/utils";
 import { getDatabase } from "./db";
 import {
@@ -6,14 +5,19 @@ import {
   BannedCountry,
   BannedCountryView,
 } from "./dbTypes";
+import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 
 // Insert a banned country
 export async function insertBannedCountryDataAccess(
   input: BannedCountryInput
 ): Promise<{ success: boolean; lastID?: number; error?: string }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const result = await db.run(
+    const [result] = await db.execute<ResultSetHeader>(
       `INSERT INTO BannedCountries (BannedCountryDate, AccountStationOptionID, CountryID, AccountTypeID) 
        VALUES (?, ?, ?, ?)`,
       [
@@ -23,20 +27,24 @@ export async function insertBannedCountryDataAccess(
         input.AccountTypeID,
       ]
     );
-    return { success: true, lastID: result.lastID };
+    return { success: true, lastID: result.insertId };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
+
+// Update a banned country
 export async function updateBannedCountryDataAccess(
   bannedCountryID: number,
   input: BannedCountryInput
 ): Promise<{ success: boolean; error?: string }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const result = await db.run(
+    const [result] = await db.execute<ResultSetHeader>(
       `UPDATE BannedCountries 
          SET BannedCountryDate = ?, AccountStationOptionID = ?, CountryID = ?, AccountTypeID = ? 
          WHERE BannedCountryID = ?`,
@@ -48,12 +56,10 @@ export async function updateBannedCountryDataAccess(
         bannedCountryID,
       ]
     );
-    const changes = result.changes ?? 0; // If undefined, fallback to 0
+    const changes = result.affectedRows ?? 0;
     return { success: changes > 0 };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -62,13 +68,17 @@ export async function getAllBannedCountriesDataAccess(): Promise<
   BannedCountry[]
 > {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const rows = await db.all("SELECT * FROM BannedCountries");
+    const [rows] = await db.execute<RowDataPacket[]>(
+      "SELECT * FROM BannedCountries"
+    );
     return rows as BannedCountry[];
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -77,8 +87,12 @@ export async function viewBannedCountryDataAccess(
   bannedCountryID: number
 ): Promise<BannedCountryView | null> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const row = await db.get(
+    const [rows] = await db.execute<RowDataPacket[]>(
       `SELECT 
          bc.BannedCountryID,
          bc.BannedCountryDate,
@@ -95,11 +109,9 @@ export async function viewBannedCountryDataAccess(
        WHERE bc.BannedCountryID = ?`,
       [bannedCountryID]
     );
-    return row ? (row as BannedCountryView) : null;
+    return rows.length > 0 ? (rows[0] as BannedCountryView) : null;
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -108,8 +120,12 @@ export async function viewAllBannedCountriesDataAccess(): Promise<
   BannedCountryView[]
 > {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const rows = await db.all(
+    const [rows] = await db.execute<RowDataPacket[]>(
       `SELECT 
          bc.BannedCountryID,
          bc.BannedCountryDate,
@@ -127,8 +143,6 @@ export async function viewAllBannedCountriesDataAccess(): Promise<
     return rows as BannedCountryView[];
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -137,17 +151,19 @@ export async function deleteBannedCountryDataAccess(
   bannedCountryID: number
 ): Promise<{ success: boolean; error?: string }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const result = await db.run(
+    const [result] = await db.execute<ResultSetHeader>(
       "DELETE FROM BannedCountries WHERE BannedCountryID = ?",
       [bannedCountryID]
     );
-    const changes = result.changes ?? 0;
+    const changes = result.affectedRows ?? 0;
     return { success: changes > 0 };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -156,16 +172,18 @@ export async function doesBannedCountryExistDataAccess(
   bannedCountryID: number
 ): Promise<boolean> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const row = await db.get(
+    const [rows] = await db.execute<RowDataPacket[]>(
       "SELECT 1 FROM BannedCountries WHERE BannedCountryID = ?",
       [bannedCountryID]
     );
-    return !!row;
+    return rows.length > 0;
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -179,20 +197,22 @@ export async function isCountryAccountBanned({
   AccountTypeName,
   CountryName,
   AccountStationOptionID,
-}: isCountryAccountBannedProps) {
+}: isCountryAccountBannedProps): Promise<boolean> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const row = await db.get(
+    const [rows] = await db.execute<RowDataPacket[]>(
       `SELECT 1 FROM BannedCountries bc
-       INNER  JOIN AccountTypes at ON bc.AccountTypeID = at.AccountTypeID
-       INNER JOIN Countries c ON  bc.CountryID = c.CountryID
-       WHERE c.CountryName = ? and at.AccountTypeName = ?  and bc.AccountStationOptionID = ? `,
+       INNER JOIN AccountTypes at ON bc.AccountTypeID = at.AccountTypeID
+       INNER JOIN Countries c ON bc.CountryID = c.CountryID
+       WHERE c.CountryName = ? and at.AccountTypeName = ? and bc.AccountStationOptionID = ?`,
       [CountryName, AccountTypeName, AccountStationOptionID]
     );
-    return !!row;
+    return rows.length > 0;
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }

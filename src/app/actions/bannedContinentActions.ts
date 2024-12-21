@@ -61,7 +61,10 @@ export async function viewAllBannedContinents(): Promise<
 export async function insertBannedContinent(
   input: Omit<BannedContinentInput, "BannedContinentDate">
 ): Promise<{ success: boolean; lastID?: number }> {
-  const currentDate = new Date().toISOString(); // Current date in ISO format
+  const currentDate = new Date()
+    .toISOString()
+    .slice(0, 19) // Get the `YYYY-MM-DDTHH:mm:ss` part
+    .replace("T", " "); // Replace `T` with a space to match MySQL's DATETIME format
   const result = await insertBannedContinentDataAccess({
     ...input,
     BannedContinentDate: currentDate,
@@ -79,7 +82,10 @@ export async function updateBannedContinent(
   bannedContinentID: number,
   input: Omit<BannedContinentInput, "BannedContinentDate">
 ): Promise<{ success: boolean }> {
-  const currentDate = new Date().toISOString(); // Current date in ISO format
+  const currentDate = new Date()
+    .toISOString()
+    .slice(0, 19) // Get the `YYYY-MM-DDTHH:mm:ss` part
+    .replace("T", " "); // Replace `T` with a space to match MySQL's DATETIME format
   const result = await updateBannedContinentDataAccess(bannedContinentID, {
     ...input,
     BannedContinentDate: currentDate,

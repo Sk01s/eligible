@@ -1,20 +1,39 @@
-import sqlite3 from "sqlite3";
-import { open, Database } from "sqlite";
-import path from "path";
+import mysql from "mysql2/promise";
+import { handleDBError } from "@/lib/utils";
 
-// Define the type for the database instance
-type SQLiteDB = Database<sqlite3.Database, sqlite3.Statement>;
+// Environment variables for database connection
+const {
+  MYSQLHOST = "localhost",
+  MYSQLPORT = "3306",
+  MYSQLUSER = "root",
+  MYSQLPASSWORD = "",
+  MYSQLDATABASE = "your_database_name",
+} = process.env;
 
-const dbFilePath = process.env.VOLUME_PATH
-  ? path.resolve(process.cwd(), "..", "db", "mydb.sqlite")
-  : path.resolve(process.cwd(), "db", "mydb.sqlite");
+let pool: mysql.Pool | null = null;
 
-// Function to get the database connection
-export async function getDatabase(): Promise<SQLiteDB> {
-  return open({
-    filename: dbFilePath,
-    driver: sqlite3.Database,
-  });
+// Function to get the MySQL database connection pool (Singleton)
+export async function getDatabase() {
+  if (pool === null) {
+    try {
+      // Create a connection pool for better scalability
+      pool = mysql.createPool({
+        host: MYSQLHOST,
+        port: parseInt(MYSQLPORT, 10),
+        user: MYSQLUSER,
+        password: MYSQLPASSWORD,
+        database: MYSQLDATABASE,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+      });
+
+      console.log("Connected to MySQL database successfully.");
+    } catch (error) {
+      handleDBError(error);
+    }
+  }
+  return pool;
 }
 
-// Helper function to identify SQLite errors
+// No need to call db.end() here because the pool will remain open as long as the application is running.

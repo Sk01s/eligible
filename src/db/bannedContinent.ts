@@ -5,14 +5,19 @@ import {
   BannedContinentInput,
   BannedContinentView,
 } from "./dbTypes";
+import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 
 // Insert a banned continent
 export async function insertBannedContinentDataAccess(
   input: BannedContinentInput
 ): Promise<{ success: boolean; lastID?: number; error?: string }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const result = await db.run(
+    const [result] = await db.execute<ResultSetHeader>(
       `INSERT INTO BannedContinents (BannedContinentDate, AccountStationOptionID, ContinentID, AccountTypeID) 
        VALUES (?, ?, ?, ?)`,
       [
@@ -22,11 +27,9 @@ export async function insertBannedContinentDataAccess(
         input.AccountTypeID,
       ]
     );
-    return { success: true, lastID: result.lastID };
+    return { success: true, lastID: result.insertId };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -36,8 +39,12 @@ export async function updateBannedContinentDataAccess(
   input: BannedContinentInput
 ): Promise<{ success: boolean; error?: string }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const result = await db.run(
+    const [result] = await db.execute<ResultSetHeader>(
       `UPDATE BannedContinents 
          SET BannedContinentDate = ?, AccountStationOptionID = ?, ContinentID = ?, AccountTypeID = ? 
          WHERE BannedContinentID = ?`,
@@ -49,12 +56,10 @@ export async function updateBannedContinentDataAccess(
         bannedContinentID,
       ]
     );
-    const changes = result.changes ?? 0;
+    const changes = result.affectedRows ?? 0;
     return { success: changes > 0 };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -63,13 +68,17 @@ export async function getAllBannedContinentsDataAccess(): Promise<
   BannedContinent[]
 > {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const rows = await db.all("SELECT * FROM BannedContinents");
+    const [rows] = await db.execute<RowDataPacket[]>(
+      "SELECT * FROM BannedContinents"
+    );
     return rows as BannedContinent[];
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -78,8 +87,12 @@ export async function viewBannedContinentDataAccess(
   bannedContinentID: number
 ): Promise<BannedContinentView | null> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const row = await db.get(
+    const [rows] = await db.execute<RowDataPacket[]>(
       `SELECT 
          bc.BannedContinentID,
          bc.BannedContinentDate,
@@ -96,11 +109,9 @@ export async function viewBannedContinentDataAccess(
        WHERE bc.BannedContinentID = ?`,
       [bannedContinentID]
     );
-    return row ? (row as BannedContinentView) : null;
+    return rows.length > 0 ? (rows[0] as BannedContinentView) : null;
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -109,8 +120,12 @@ export async function viewAllBannedContinentsDataAccess(): Promise<
   BannedContinentView[]
 > {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const rows = await db.all(
+    const [rows] = await db.execute<RowDataPacket[]>(
       `SELECT 
          bc.BannedContinentID,
          bc.BannedContinentDate,
@@ -128,8 +143,6 @@ export async function viewAllBannedContinentsDataAccess(): Promise<
     return rows as BannedContinentView[];
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -138,17 +151,19 @@ export async function deleteBannedContinentDataAccess(
   bannedContinentID: number
 ): Promise<{ success: boolean; error?: string }> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const result = await db.run(
+    const [result] = await db.execute<ResultSetHeader>(
       "DELETE FROM BannedContinents WHERE BannedContinentID = ?",
       [bannedContinentID]
     );
-    const changes = result.changes ?? 0;
+    const changes = result.affectedRows ?? 0;
     return { success: changes > 0 };
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -157,16 +172,18 @@ export async function doesBannedContinentExistDataAccess(
   bannedContinentID: number
 ): Promise<boolean> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const row = await db.get(
+    const [rows] = await db.execute<RowDataPacket[]>(
       "SELECT 1 FROM BannedContinents WHERE BannedContinentID = ?",
       [bannedContinentID]
     );
-    return !!row;
+    return rows.length > 0;
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
 
@@ -180,19 +197,23 @@ export async function isContinentAccountBanned({
   AccountTypeName,
   CountryName,
   AccountStationOptionID,
-}: isContinentAccountBannedProps) {
+}: isContinentAccountBannedProps): Promise<boolean> {
   const db = await getDatabase();
+  if (!db) {
+    throw new Error("DB is not defined");
+  }
+
   try {
-    const row = await db.get(
+    const [rows] = await db.execute<RowDataPacket[]>(
       `SELECT 1 FROM BannedContinents bc
-       INNER  JOIN AccountTypes at ON bc.AccountTypeID = at.AccountTypeID
-       WHERE bc.ContinentID = (select ContinentID from Countries where CountryName = ?) and at.AccountTypeName = ?  and bc.AccountStationOptionID = ? `,
+       INNER JOIN AccountTypes at ON bc.AccountTypeID = at.AccountTypeID
+       WHERE bc.ContinentID = (SELECT ContinentID FROM Countries WHERE CountryName = ?) 
+         AND at.AccountTypeName = ? 
+         AND bc.AccountStationOptionID = ?`,
       [CountryName, AccountTypeName, AccountStationOptionID]
     );
-    return !!row;
+    return rows.length > 0;
   } catch (error: unknown) {
     return handleDBError(error);
-  } finally {
-    await db.close();
   }
 }
