@@ -1,22 +1,20 @@
 import Form from "@/components/Form";
-import { getAllCountries } from "../actions/countryActions";
-import { getAllNationalities } from "../actions/nationalityActions";
-import { getAllAccountTypes } from "../actions/accountTypesActions";
+
 import InformationDisplay from "@/components/About";
+import { fetchAllEligibleData } from "@/lib/utils";
 
 export default async function EligiblePage() {
-  const countries = await getAllCountries();
-  const nationalities = await getAllNationalities();
-  const accountTypes = await getAllAccountTypes();
+  const { accountTypes, nationalities, countries } =
+    await fetchAllEligibleData();
 
   return (
-    <>
+    <main className="mt-10">
       <Form
         countries={countries}
         nationalities={nationalities}
         accountTypes={accountTypes}
       />
       <InformationDisplay />
-    </>
+    </main>
   );
 }

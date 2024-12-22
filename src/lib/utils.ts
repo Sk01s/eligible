@@ -1267,3 +1267,11 @@ export async function fetchAllBannedData() {
     accountStationOptions,
   };
 }
+export async function fetchAllEligibleData() {
+  const [countries, nationalities, accountTypes] = await Promise.all([
+    getAllCountries(),
+    getAllNationalities(),
+    getAllAccountTypes(),
+  ]);
+  return { countries, nationalities, accountTypes };
+}

@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+// app/layout.js (Server-side component)
+
 import localFont from "next/font/local";
-import "./globals.css";
+import "./globals.css"; // Ensure the nprogress CSS is imported
 import Navbar from "@/components/Navbar";
 
 const geistSans = localFont({
@@ -14,9 +15,10 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-export const metadata: Metadata = {
-  title: "CFI",
-  description: " CFI",
+// This should remain server-side (no 'use client')
+export const metadata = {
+  title: "Back Office By M",
+  description: "CFI",
 };
 
 export default function RootLayout({

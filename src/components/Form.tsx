@@ -73,7 +73,7 @@ export default function Form({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="max-w-md mx-auto p-6 space-y-6 bg-white shadow rounded">
+      <div className="max-w-md mx-auto p-6 space-y-6 bg-white shadow-lg rounded-lg">
         <h1 className="text-xl font-bold">Eligible</h1>
         {/* Country */}
         <SelectInput

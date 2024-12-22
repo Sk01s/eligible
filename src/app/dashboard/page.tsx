@@ -1,4 +1,7 @@
 import BannedForm from "@/components/BannedForm";
+import { fetchAllBannedData } from "@/lib/utils";
+export const dynamic = "force-dynamic"; // Ensures it's always rendered server-side
 export default async function Page() {
-  return <BannedForm />;
+  const initialData = await fetchAllBannedData();
+  return <BannedForm initialData={initialData} />;
 }

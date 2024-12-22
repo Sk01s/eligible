@@ -27,6 +27,7 @@
     "lucide-react": "^0.468.0",
     "mysql2": "^3.11.5",
     "next": "15.0.4",
+    "nprogress": "^0.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sqlite": "^5.1.1",
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/nprogress": "^0.2.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^8",
