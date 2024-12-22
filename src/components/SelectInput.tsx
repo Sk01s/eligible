@@ -10,12 +10,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { SetStateAction, useState } from "react";
 
-// Generic type for SelectInputProps
 type SelectInputProps<T> = {
   defaultValue?: string;
-  array: T[]; // Array of any object type
-  name: string; // Property name to filter by (e.g., 'Country', 'Nationality', etc.)
-  setSelected: (value: SetStateAction<string | null>) => void; // Function to set selected value
+  array: T[];
+  name: string;
+  setSelected: (value: SetStateAction<string | null>) => void;
 };
 
 function makeFirstLetterLowerCase(str: string): string {
@@ -31,7 +30,6 @@ function addSpaceBeforeCapitals(str: string): string {
   return str.replace(/([A-Z])/g, " $1");
 }
 
-// Handle arrays of different object types (Country, Continent, Nationality)
 export default function SelectInput<T>({
   defaultValue = "",
   array,
@@ -40,13 +38,12 @@ export default function SelectInput<T>({
 }: SelectInputProps<T>) {
   const [query, setQuery] = useState<string>("");
 
-  // Filter the array based on the dynamic property name
   const filtered = array.filter((item) => {
-    const propertyName = `${name}Name` as keyof T; // Ensure the property exists on the object
-
-    const propertyValue = item[propertyName as keyof T] as string; // Access the property dynamically
+    const propertyName = `${name}Name` as keyof T;
+    const propertyValue = item[propertyName as keyof T] as string;
     return (
-      propertyValue && propertyValue.toLowerCase().includes(query.toLowerCase())
+      propertyValue &&
+      propertyValue.toLowerCase().startsWith(query.toLowerCase())
     );
   });
 
@@ -66,11 +63,15 @@ export default function SelectInput<T>({
           />
         </SelectTrigger>
         <SelectContent>
-          <div className="px-2 py-1">
+          <div
+            className="px-2 py-1"
+            onClick={(e) => e.stopPropagation()} // Prevents `Select` focus handling
+          >
             <Input
               placeholder="Type to search..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()} // Prevents key events from propagating to `Select`
             />
           </div>
           {filtered.map((item) => (

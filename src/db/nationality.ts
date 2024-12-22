@@ -111,7 +111,7 @@ export async function getAllNationalitiesDataAccess(): Promise<Nationality[]> {
 
   try {
     const [rows] = await db.execute<RowDataPacket[]>(
-      "SELECT * FROM Nationality"
+      "SELECT * FROM Nationality Order by NationalityName"
     );
     return rows as Nationality[];
   } catch (error: unknown) {

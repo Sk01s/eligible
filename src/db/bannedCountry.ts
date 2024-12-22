@@ -138,7 +138,8 @@ export async function viewAllBannedCountriesDataAccess(): Promise<
        FROM BannedCountries bc
        INNER JOIN AccountStationOptions aso ON bc.AccountStationOptionID = aso.AccountStationOptionID
        INNER JOIN Countries c ON bc.CountryID = c.CountryID
-       INNER JOIN AccountTypes at ON bc.AccountTypeID = at.AccountTypeID`
+       INNER JOIN AccountTypes at ON bc.AccountTypeID = at.AccountTypeID
+       Order by aso.AccountStationOptionName ,c.CountryName`
     );
     return rows as BannedCountryView[];
   } catch (error: unknown) {

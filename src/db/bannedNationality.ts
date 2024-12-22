@@ -138,7 +138,8 @@ export async function viewAllBannedNationalitiesDataAccess(): Promise<
        FROM BannedNationalites bn
        INNER JOIN Nationality n ON bn.NationalityID = n.NationalityID
        INNER JOIN AccountStationOptions aso ON bn.AccountStationOptionID = aso.AccountStationOptionID
-       INNER JOIN AccountTypes at ON bn.AccountTypeID = at.AccountTypeID`
+       INNER JOIN AccountTypes at ON bn.AccountTypeID = at.AccountTypeID
+       Order by aso.AccountStationOptionName, n.NationalityName`
     );
     return rows as BannedNationalityView[];
   } catch (error: unknown) {

@@ -112,7 +112,9 @@ export async function getAllCountriesDataAccess(): Promise<Country[]> {
     throw new Error("DB is not defined");
   }
   try {
-    const [rows] = await db.execute<RowDataPacket[]>("SELECT * FROM Countries");
+    const [rows] = await db.execute<RowDataPacket[]>(
+      "SELECT * FROM Countries Order by CountryName"
+    );
     return rows as Country[];
   } catch (error: unknown) {
     return handleDBError(error);
