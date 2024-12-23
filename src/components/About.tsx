@@ -6,6 +6,12 @@ const InformationDisplay = () => {
       <h2 className="text-xl font-bold text-blue-600 mb-4">
         To Inform Dealing
       </h2>
+      <div className="mb-5">
+        Note:{" "}
+        <strong>
+          Don&apos;t open any sub for fawze mazraane customer number: 97209
+        </strong>
+      </div>
       <ul className="list-disc ml-6 mb-6 space-y-2">
         <li>72699 if new sub opened (Lee Sheau Mei)</li>
         <li>50154548 if new sub opened (Shahla Omar Abdullah)</li>
@@ -46,12 +52,6 @@ const InformationDisplay = () => {
         <li>Hussein Safa</li>
         <li>Ali Mousa</li>
       </ul>
-      <div>
-        <strong>
-          Note: Don&apos;t not open any new sub for 97209 if requested from AE
-          or the client
-        </strong>
-      </div>
     </div>
   );
 };
