@@ -46,6 +46,12 @@ const InformationDisplay = () => {
         <li>Hussein Safa</li>
         <li>Ali Mousa</li>
       </ul>
+      <div>
+        <strong>
+          Note: Don&apos;t not open any new sub for 97209 if requested from AE
+          or the client
+        </strong>
+      </div>
     </div>
   );
 };

@@ -17,7 +17,7 @@ const geistMono = localFont({
 
 // This should remain server-side (no 'use client')
 export const metadata = {
-  title: "Back Office By M",
+  title: "Back Office By MO",
   description: "CFI",
 };
 
